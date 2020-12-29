@@ -1,0 +1,25 @@
+{
+  "name": "atlan",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "async": "^3.2.0",
+    "child_process": "^1.0.2",
+    "csv": "^0.3.7",
+    "csv-parse": "^4.14.2",
+    "csv-parser": "^3.0.0",
+    "express": "^4.17.1",
+    "fast-csv": "^4.3.6",
+    "lodash": "^4.17.20",
+    "moment": "^2.29.1",
+    "mongodb": "^3.6.3",
+    "multer": "^1.4.2",
+    "net": "^1.0.2"
+  }
+}
