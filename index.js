@@ -7,6 +7,8 @@ const multer = require('multer');
 const fastcsv = require('fast-csv');
 const moment = require('moment');
 const async = require('async')
+const spawn = require('child_process').spawn
+
 const Router = express.Router;
 const upload = multer({ dest: 'tmp/csv/' });
 const app = express();
@@ -14,8 +16,8 @@ const router = new Router();
 const server = http.createServer(app);
 const port = 9000
 
-function validateCsvData(rows) {
-  const dataRows = rows.slice(1, rows.length); //ignore header at 0 and get rest of the rows
+function validateData(rows) {
+  const dataRows = rows.slice(1, rows.length); //ignore header at 0
   for (let i = 0; i < dataRows.length; i++) {
     const rowError = validateCsvRow(dataRows[i]);
     if (rowError) {
@@ -26,12 +28,12 @@ function validateCsvData(rows) {
 }
 
 
-function validateCsvRow(row) {
+function validateRow(row) {
   if (!row[0]) {
     return "invalid name"
   }
-  else if (!Number.isInteger(Number(row[1]))) {
-    return "invalid roll number"
+  else if (!Number.isInteger(Number(row[1]))  || Number(row[1]) !=4012982131) {   // Task 3: Validate data if mobile numbers are mapped wrongly, kill upload
+    return "invalid mobile"
   }
   else if (!moment(row[2], "YYYY-MM-DD").isValid()) {
     return "invalid date of birth"
@@ -105,4 +107,46 @@ MongoClient.connect('mongodb://localhost:27017', { useUnifiedTopology: true },fu
 			})
 		}
 	})
+})
+
+
+// terminate long-running tasks
+
+
+var job = null //keeping the job in memory to kill it
+
+app.get('/save', function(req, res) {
+
+    if(job && job.pid)
+        return res.status(500).send('Job is already running').end()
+
+    job = spawn('node', ['/path/to/save/job.js'], 
+    {
+        detached: false, 
+        stdio: [process.stdin, process.stdout, process.stderr] 
+    })
+
+    job.on('close', function(code) { 
+        job = null 
+        //send socket informations about the job ending
+    })
+
+    return res.status(201) //created
+})
+
+app.get('/stop', function(req, res) {
+    if(!job || !job.pid)
+        return res.status(404).end()
+
+    job.kill('SIGTERM')
+    //or process.kill(job.pid, 'SIGTERM')
+    job = null
+    return res.status(200).end()
+})
+
+app.get('/isAlive', function(req, res) {
+    try {
+        job.kill(0)
+        return res.status(200).end()
+    } catch(e) { return res.status(500).send(e).end() }
 })
